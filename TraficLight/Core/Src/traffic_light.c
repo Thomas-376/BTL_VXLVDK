@@ -33,7 +33,6 @@ void set_Traffic_2_Yellow(void) {
     HAL_GPIO_WritePin(TRAFFIC2_PIN2_GPIO_Port, TRAFFIC2_PIN2_Pin, GPIO_PIN_SET);
 }
 
-// =================== UPDATE STATE ===================
 void update_Traffic_Light(int state) {
     switch (state) {
         case RED_GREEN:
