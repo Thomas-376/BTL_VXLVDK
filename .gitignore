@@ -7,3 +7,6 @@ Release/
 *.su
 .metadata/
 ./vscode
+.settings/
+*.launch
+*.cfg
