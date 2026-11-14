@@ -23,6 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "scheduler.h"
+#include "button.h"
+#include "traffic_light.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,9 +64,31 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// Tạo một task mẫu nháy LED đính kèm trên bo mạch để test Scheduler
 void Task_BlinkLED(void) {
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+}
+
+void Task_Traffic_Auto(void) {
+    static int sec = 0;
+
+    if (sec < 3) {
+        set_Traffic_1_Red();
+        set_Traffic_2_Green();
+    } else if (sec < 5) {
+        set_Traffic_1_Red();
+        set_Traffic_2_Yellow();
+    } else if (sec < 8) {
+        set_Traffic_1_Green();
+        set_Traffic_2_Red();
+    } else {
+        set_Traffic_1_Yellow();
+        set_Traffic_2_Red();
+    }
+
+    sec++;
+    if (sec >= 10) {
+        sec = 0;
+    }
 }
 /* USER CODE END 0 */
 
@@ -101,13 +125,12 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  // 1. Khởi tạo Scheduler
   SCH_Init();
 
-  // 2. Thêm Task nháy LED chu kỳ 100 ticks (giả sử Timer 2 cấu hình tick = 10ms -> 1s nháy 1 lần)
   SCH_Add_Task(Task_BlinkLED, 0, 100);
+  SCH_Add_Task(button_reading, 0, 1);
+  SCH_Add_Task(Task_Traffic_Auto, 0, 100);
 
-  // 3. Bắt đầu chạy Timer 2 ở chế độ ngắt (Interrupt)
   HAL_TIM_Base_Start_IT(&htim2);
 
   /* USER CODE END 2 */
@@ -119,7 +142,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // 4. Gọi bộ phân phối Task liên tục trong vòng lặp vô hạn
     SCH_Dispatch_Tasks();
   }
   /* USER CODE END 3 */
@@ -340,7 +362,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Hàm ngắt của Timer 2: Kích hoạt bộ đếm thời gian cho Scheduler
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM2)
